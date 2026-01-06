@@ -1,0 +1,14 @@
+diff --git a/pc/uiohook.pc.in b/pc/uiohook.pc.in
+index 8f1e7d5..0422754 100644
+--- a/pc/uiohook.pc.in
++++ b/pc/uiohook.pc.in
+@@ -1,7 +1,7 @@
+ prefix=@CMAKE_INSTALL_PREFIX@
+ exec_prefix=${prefix}
+-libdir=${prefix}/lib
+-includedir=${prefix}/@CMAKE_INSTALL_INCLUDEDIR@
++libdir=lib
++includedir=@CMAKE_INSTALL_INCLUDEDIR@
+
+ Name: uiohook
+ Description: uiohook library

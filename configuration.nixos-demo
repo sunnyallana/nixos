@@ -1,0 +1,188 @@
+{ config, pkgs, ... }:
+
+{
+  imports = [
+    ./hardware-configuration.nix
+  ];
+
+  ################################
+  # Bootloader
+  ################################
+  boot.loader.grub.enable = true;
+  boot.loader.grub.device = "/dev/nvme0n1";
+  boot.loader.grub.useOSProber = true;
+
+  ################################
+  # Networking
+  ################################
+  networking.hostName = "nixos";
+  networking.networkmanager.enable = true;
+
+  ################################
+  # Time & Locale
+  ################################
+  time.timeZone = "America/New_York";
+
+  i18n.defaultLocale = "en_US.UTF-8";
+  i18n.extraLocaleSettings = {
+    LC_ADDRESS = "en_US.UTF-8";
+    LC_IDENTIFICATION = "en_US.UTF-8";
+    LC_MEASUREMENT = "en_US.UTF-8";
+    LC_MONETARY = "en_US.UTF-8";
+    LC_NAME = "en_US.UTF-8";
+    LC_NUMERIC = "en_US.UTF-8";
+    LC_PAPER = "en_US.UTF-8";
+    LC_TELEPHONE = "en_US.UTF-8";
+    LC_TIME = "en_US.UTF-8";
+  };
+
+  ################################
+  # Graphics (Intel iGPU)
+  ################################
+  services.xserver.enable = false;
+
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-driver
+      intel-vaapi-driver
+    ];
+  };
+
+  ################################
+  # Hyprland (Wayland)
+  ################################
+  programs.hyprland = {
+    enable = true;
+    xwayland.enable = true;
+  };
+
+  ################################
+  # Login Manager (greetd)
+  ################################
+  services.greetd = {
+    enable = true;
+    settings = {
+      default_session = {
+        command = "Hyprland";
+        user = "onyxd";
+      };
+    };
+  };
+
+  ################################
+  # XDG Portals (REQUIRED)
+  ################################
+  xdg.portal = {
+    enable = true;
+    extraPortals = with pkgs; [
+      xdg-desktop-portal-hyprland
+      xdg-desktop-portal-gtk
+    ];
+  };
+
+  ################################
+  # Audio (PipeWire)
+  ################################
+  services.pulseaudio.enable = false;
+  security.rtkit.enable = true;
+
+  services.pipewire = {
+    enable = true;
+    alsa.enable = true;
+    alsa.support32Bit = true;
+    pulse.enable = true;
+  };
+
+  ################################
+  # Power & Thermals (Laptop)
+  ################################
+  services.power-profiles-daemon.enable = true;
+  services.thermald.enable = true;
+
+  ################################
+  # Printing
+  ################################
+  services.printing.enable = true;
+
+  ################################
+  # Polkit
+  ################################
+  security.polkit.enable = true;
+
+  systemd.user.services.polkit-gnome-authentication-agent-1 = {
+    description = "Polkit GNOME Authentication Agent";
+    wantedBy = [ "graphical-session.target" ];
+    serviceConfig = {
+      ExecStart =
+        "${pkgs.polkit_gnome}/libexec/polkit-gnome-authentication-agent-1";
+      Restart = "always";
+    };
+  };
+
+  ################################
+  # Users
+  ################################
+  users.users.onyxd = {
+    isNormalUser = true;
+    description = "Onyx Daemon";
+    extraGroups = [ "wheel" "networkmanager" ];
+  };
+
+  ################################
+  # Environment Variables (Wayland)
+  ################################
+  environment.sessionVariables = {
+    NIXOS_OZONE_WL = "1";
+    MOZ_ENABLE_WAYLAND = "1";
+    XDG_SESSION_TYPE = "wayland";
+    ELECTRON_OZONE_PLATFORM_HINT = "wayland";
+  };
+
+  ################################
+  # System Packages
+  ################################
+  environment.systemPackages = with pkgs; [
+    # Core
+    kitty
+    waybar
+    rofi
+    dunst
+    wl-clipboard
+    grim
+    slurp
+    polkit_gnome
+    brightnessctl
+    playerctl
+    pcmanfm
+    hyprpaper
+
+    # Preferred Apps
+    zed-editor
+    keepassxc
+    brave
+  ];
+
+
+
+  ################################
+  # Programs
+  ################################
+  programs.firefox.enable = true;
+
+  ################################
+  # Nix
+  ################################
+  nixpkgs.config.allowUnfree = true;
+  nix = {
+   settings = {
+    experimental-features = [ "nix-command" "flakes" ];
+    auto-optimise-store = true;
+   };
+  };
+
+  ################################
+  # State Version
+  ################################
+  system.stateVersion = "25.11";
+}
